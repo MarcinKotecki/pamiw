@@ -1,16 +1,14 @@
-from flask import Flask 
+from flask import Flask, render_template, make_response
 app = Flask(__name__)
 app.debug = True
 
-@app.route('/check/<username>')
-def check(username):
-    if username == 'koteckim':
-        return {username: 'taken'}
-    return {username: 'availible'}
-
 @app.route('/')
 def index():
-    return "Witaj"
+    return render_template("index.html")
+
+@app.route('/sender/sign-up')
+def sender_sign_up():
+    return render_template("sender_sign_up.html")
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)

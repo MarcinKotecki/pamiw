@@ -9,39 +9,39 @@
         <div id="wrap">
             {% include "/common/header.html" %}
             <main>
-                <form class="form-container" method="POST" action="http://localhost:2137/register">
+                <form class="form-container" method="POST" enctype="multipart/form-data" action="https://infinite-hamlet-29399.herokuapp.com/sender/register">
                     <h4>Zarejestruj się jako nadawca</h4>
                     <div class="form-elements">
                         <p>
                             <label>Login</label>
-                            <input type="text" id="login" name="login" placeholder="Nazwa użytkownika"/>
+                            <input type="text" class="form-control validated-input" id="login" name="login" placeholder="Nazwa użytkownika"/>
                         </p>
                         <p>
                             <label>Hasło</label>
-                            <input type="password" id="password" name="password" placeholder="Hasło"/>
+                            <input type="password" class="form-control validated-input" id="password" name="password" placeholder="Hasło"/>
                         </p>
                         <p>
                             <label>Powtórz hasło</label>
-                            <input type="password" id="password" name="password" placeholder="Powtórz hasło"/>
+                            <input type="password" class="form-control validated-input" id="rpassword" name="rpassword" placeholder="Powtórz hasło"/>
                         </p>
                         <p>
                             <label>Imię</label>
-                            <input type="text" id="firstname" name="firstname" placeholder="Imię"/>
+                            <input type="text" class="form-control validated-input" id="firstname" name="firstname" placeholder="Imię"/>
                         </p>
                         <p>
                             <label>Nazwisko</label>
-                            <input type="text" id="lastname" name="lastname" placeholder="Nazwisko"/>
+                            <input type="text"  class="form-control validated-input" id="lastname" name="lastname" placeholder="Nazwisko"/>
                         </p>
                         <p>
                             <label>Płeć</label>
-                            <select id="sex" name="sex">
-                                <option>mężczyzna</option>
-                                <option>kobieta</option>
+                            <select class="form-control validated-input" id="sex" name="sex">
+                                <option>M</option>
+                                <option>F</option>
                             </select>
                         </p>
                         <p>
                             <label>Zdjęcie</label>
-                            <input type="file" class="form-control-file" id="exampleFormControlFile1">
+                            <input type="file" class="form-control-file validated-input" id="photo" name="photo">
                         </p>
                     </div>
                     <input class="input-submit" type="submit" name="submit" value="Zarejestruj"/>
