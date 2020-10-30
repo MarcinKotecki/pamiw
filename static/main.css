@@ -1,6 +1,14 @@
 body,html {
     height:100%;
 }
+.simple {
+    margin:40px auto;
+    max-width:650px;
+    line-height:1.6;
+    font-size:18px;
+    color:#444;
+    padding:0 10px
+}
 #wrap {
     min-height:100%;
 }
