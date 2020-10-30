@@ -17,7 +17,7 @@ function verify_login(value) {
             var login = document.getElementById("login");
             var submit = document.getElementsByClassName("input-submit")[0]
             if (xhr.status === 200) {
-                if (JSON.parse(xhr.response)[value] == "taken" && login.value == value) {
+                if (JSON.parse(xhr.response)[value] === "taken" && login.value === value) {
                     login.classList.add('is-invalid');
                     submit.disabled = true;
                 }
