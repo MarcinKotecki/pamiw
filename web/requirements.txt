@@ -1,0 +1,7 @@
+Flask
+Flask-session
+gunicorn
+python-dotenv
+redis
+bcrypt
+jwt

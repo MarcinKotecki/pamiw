@@ -1,3 +1,3 @@
-docker build -t koteckim/pamiw .
-docker run --rm -p5000:5000 koteckim/pamiw
-
+#!/bin/sh
+docker-compose build
+docker-compose up

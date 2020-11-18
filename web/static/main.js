@@ -73,4 +73,4 @@ function attach_events() {
     });
 }
 
-attach_events()
+//attach_events()
