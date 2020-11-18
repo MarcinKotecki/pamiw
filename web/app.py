@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, make_response, session, redirect
+from flask import Flask, request, render_template, make_response, session, redirect, flash
 from flask_session import Session
 from dotenv import load_dotenv
 from bcrypt import hashpw, checkpw, gensalt
@@ -94,6 +94,8 @@ def sender_logout():
 @app.route('/sender/dashboard')
 def sender_dashboard():
     packages = [{'id':123,'receiver':'bogdan z bydgoszczy','machine_id':'WAW123','size':'M'}]
+    if not session.get('logged-in', False):
+        return redirect('/')
     return render_template("sender-dashboard.html", login_state = session.get('logged-in', False), packages = packages)
 
 @app.route('/sender/packages', methods=['GET'])
