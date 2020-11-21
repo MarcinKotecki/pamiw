@@ -1,21 +1,65 @@
 {% extends "common/layout.html" %}
 {% block title %}Moje paczki{% endblock %}
 {% block main %}
+{% with messages = get_flashed_messages() %}
 <section>
     <h4>Lista paczek</h4>
-    <table class="table">
+    <table class="table table-striped table-bordered">
         <tr>
             <th scope="col">Identyfikator paczki</th>
             <th scope="col">Odbiorca</th>
             <th scope="col">Identyfikator skrytki</th>
-            <th scope="col">Rozmiar paczki</th>
+            <th scope="col">Rozmiar</th>
+            <th scope="col"></th>
         </tr>
-        {% for package in packages %}
-            <th scope="row">{{package.id}}</th>
+        {% for id, package in packages.items() %}
+        <tr>
+            <th scope="row">{{id}}</th>
             <th>{{package.receiver}}</th>
             <th>{{package.machine_id}}</th>
             <th>{{package.size}}</th>
+            <th>
+                <form method="POST" action="/sender/package?action=delete">
+                    <input type="hidden" id="id" name="id" value="{{id}}">
+                    <input type="submit" class="btn btn-danger" name="submit" value="usuń"/>
+                </form>
+            </th>
+        </tr>
         {% endfor %}
     </table>
 </section>
+<section>
+    <form class="form-container" method="POST" action="/sender/package">
+        <h4>Utwórz etykietę paczki</h4>
+        <div class="form-elements">
+            <p>
+                <label>Odbiorca</label>
+                <input type="text" class="form-control validated-input" id="receiver" name="receiver" placeholder="odbiorca" value="{{ form_data.get('receiver', '') }}"/>
+                {% if 'receiver' in messages %}
+                <label class="alert alert-danger" role="alert">Brak odbiorcy</label>
+                {% endif %}
+            </p>
+            <p>
+                <label>ID skrytki</label>
+                <input type="text" class="form-control validated-input" id="machine_id" name="machine_id" placeholder="id skrytki" value="{{ form_data.get('machine_id', '') }}"/>
+                {% if 'machine_id' in messages %}
+                <label class="alert alert-danger" role="alert">Brak skrytki</label>
+                {% endif %}
+            </p>
+            <p>
+                <label>Rozmiar paczki</label>
+                <select name="size" id="size" selected="{{ form_data.get('size', '') }}">
+                    <option value="S" {% if form_data.get('size', '') == 'S' %}selected{% endif %}>S</option>
+                    <option value="M" {% if form_data.get('size', '') == 'M' %}selected{% endif %}>M</option>
+                    <option value="L" {% if form_data.get('size', '') == 'L' %}selected{% endif %}>L</option>
+                  </select>
+                {% if 'size' in messages %}
+                <label class="alert alert-danger" role="alert">Błędny rozmiar</label>
+                {% endif %}
+            </p>
+        </div>
+        <input type="submit" name="submit" value="Utwórz etykietę"/>
+    </form>
+</section>
+{% endwith %}
 {% endblock %}

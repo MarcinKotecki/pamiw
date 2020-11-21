@@ -7,7 +7,7 @@
         <li class="nav-item">
             <a class="nav-link" href="/">Strona główna</a>
         </li>
-        {% if login_state %}
+        {% if session.get('logged-in', False) %}
         <li class="nav-item">
             <a class="nav-link" href="/sender/dashboard">Moje paczki</a>
         </li>

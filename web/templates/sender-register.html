@@ -1,7 +1,65 @@
 {% extends "common/layout.html" %}
 {% block title %}Rejestracja{% endblock %}
 {% block main %}
+{% with messages = get_flashed_messages() %}
 <section>
-    {% include "/forms/register-form.html" %}
+    <form class="form-container" method="POST" action="/sender/register">
+        <h4>Zarejestruj się</h4>
+        <div class="form-elements">
+            <p>
+                <label>Imię</label>
+                <input type="text" class="form-control validated-input" id="firstname" name="firstname" placeholder="Imię" value="{{ form_data.get('firstname', '') }}"/>
+                {% if 'firstname' in messages %}
+                <label><label class="alert alert-danger" role="alert">Błędne imię</label>
+                {% endif %}
+            </p>
+            <p>
+                <label>Nazwisko</label>
+                <input type="text"  class="form-control validated-input" id="lastname" name="lastname" placeholder="Nazwisko" value="{{ form_data.get('lastname', '') }}"/>
+                {% if 'lastname' in messages %}
+                <label class="alert alert-danger" role="alert">Błędne nazwisko</label>
+                {% endif %}
+            </p>
+            <p>
+                <label>Login</label>
+                <input type="text" class="form-control validated-input" id="login" name="login" placeholder="Login" value="{{ form_data.get('login', '') }}"/>
+                {% if 'login_taken' in messages %}
+                <label class="alert alert-danger" role="alert">Login zajęty</label>
+                {% elif 'login' in messages %}
+                <label class="alert alert-danger" role="alert">Błędny login</label>
+                {% endif %}
+            </p>
+            <p>
+                <label>Email</label>
+                <input type="text" class="form-control validated-input" id="email" name="email" placeholder="Email" value="{{ form_data.get('email', '') }}"/>
+                {% if 'email' in messages %}
+                <label class="alert alert-danger" role="alert">Błędny email</label>
+                {% endif %}
+            </p>
+            <p>
+                <label>Hasło</label>
+                <input type="password" class="form-control validated-input" id="password" name="password" placeholder="Hasło"/>
+                {% if 'password' in messages %}
+                <label class="alert alert-danger" role="alert">Błędne hasło</label>
+                {% endif %}
+            </p>
+            <p>
+                <label>Powtórz hasło</label>
+                <input type="password" class="form-control validated-input" id="rpassword" name="rpassword" placeholder="Powtórz hasło"/>
+                {% if 'rpassword' in messages %}
+                <label class="alert alert-danger" role="alert">Różne hasła</label>
+                {% endif %}
+            </p>
+            <p>
+                <label>Adres</label>
+                <input type="text" class="form-control validated-input" id="address" name="address" placeholder="Adres" value="{{ form_data.get('address', '') }}"/>
+                {% if 'address' in messages %}
+                <label class="alert alert-danger" role="alert">Błędny adres</label>
+                {% endif %}
+            </p>
+        </div>
+        <input type="submit" name="submit" value="Zarejestruj się"/>
+    </form>
 </section>
+{% endwith %}
 {% endblock %}
