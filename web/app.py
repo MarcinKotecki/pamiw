@@ -7,6 +7,7 @@ from datetime import timedelta, datetime
 from redis import Redis
 import uuid
 import json
+import re
 
 load_dotenv()
 redis_url = getenv("REDIS_URL")
@@ -53,6 +54,24 @@ def delete_package(login, packageid):
     jpackages = json.dumps(packages)
     db.hset(f"user:{login}", "packages", jpackages)
 
+
+def isvalid(field, value):
+    PL = 'ĄĆĘŁŃÓŚŹŻ'
+    pl = 'ąćęłńóśźż'
+    if field == 'firstname':
+        return re.compile(f'[A-Z{PL}][a-z{pl}]+').match(value)
+    if field == 'lastname':
+        return re.compile(f'[A-Z{PL}][a-z{pl}]+').match(value)
+    if field == 'login':
+        return re.compile('[a-z]{3,16}').match(value)
+    if field == 'email':
+        return re.compile('[\w\.-]+@[\w\.-]+(\.[\w]+)+').match(value)
+    if field == 'password':
+        return re.compile('.{8,}').match(value.strip())
+    if field == 'address':
+        return re.compile('.+').match(value.strip())
+    return False
+
 @app.route('/')
 def index():
     return render_template("index.html")
@@ -72,15 +91,14 @@ def sender_register():
     address = request.form.get("address")
 
     errors = []
-    if len(firstname) == 0: errors.append('firstname')
-    if len(lastname) == 0: errors.append('lastname')
-    if len(login) == 0: errors.append('login')
+    if not isvalid("firstname", firstname): errors.append('firstname')
+    if not isvalid("lastname", lastname): errors.append('lastname')
+    if not isvalid("login", login): errors.append('login')
     if user_exists(login): errors.append('login_taken')
-    if len(email) == 0: errors.append('email')
-    if len(password) == 0: errors.append('password')
+    if not isvalid("email", email): errors.append('email')
+    if not isvalid("password", password): errors.append('password')
     if password != rpassword: errors.append('rpassword')
-    if len(email) == 0: errors.append('email')
-    if len(address) == 0: errors.append('address')
+    if not isvalid("address", address): errors.append('address')
     if len(errors) > 0:
         for error in errors:
             flash(error)

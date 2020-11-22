@@ -4,32 +4,6 @@
 {% with messages = get_flashed_messages() %}
 {% with form_data = session.pop('form_data', {}) %}
 <section>
-    <h4>Lista paczek</h4>
-    <table class="table table-striped table-bordered">
-        <tr>
-            <th scope="col">Identyfikator paczki</th>
-            <th scope="col">Odbiorca</th>
-            <th scope="col">Identyfikator skrytki</th>
-            <th scope="col">Rozmiar</th>
-            <th scope="col"></th>
-        </tr>
-        {% for id, package in packages.items() %}
-        <tr>
-            <th scope="row">{{id}}</th>
-            <th>{{package.receiver}}</th>
-            <th>{{package.machine_id}}</th>
-            <th>{{package.size}}</th>
-            <th>
-                <form method="POST" action="/sender/package?action=delete">
-                    <input type="hidden" id="id" name="id" value="{{id}}">
-                    <input type="submit" class="btn btn-danger" name="submit" value="usuń"/>
-                </form>
-            </th>
-        </tr>
-        {% endfor %}
-    </table>
-</section>
-<section>
     <form class="form-container" method="POST" action="/sender/package">
         <h4>Utwórz etykietę paczki</h4>
         <div class="form-elements">
@@ -61,6 +35,32 @@
         </div>
         <input type="submit" name="submit" value="Utwórz etykietę"/>
     </form>
+</section>
+<section>
+    <h4>Lista paczek</h4>
+    <table class="table table-striped table-bordered">
+        <tr>
+            <th scope="col">Identyfikator paczki</th>
+            <th scope="col">Odbiorca</th>
+            <th scope="col">Identyfikator skrytki</th>
+            <th scope="col">Rozmiar</th>
+            <th scope="col"></th>
+        </tr>
+        {% for id, package in packages.items() %}
+        <tr>
+            <th scope="row">{{id}}</th>
+            <th>{{package.receiver}}</th>
+            <th>{{package.machine_id}}</th>
+            <th>{{package.size}}</th>
+            <th>
+                <form method="POST" action="/sender/package?action=delete">
+                    <input type="hidden" id="id" name="id" value="{{id}}">
+                    <input type="submit" class="btn btn-danger" name="submit" value="usuń"/>
+                </form>
+            </th>
+        </tr>
+        {% endfor %}
+    </table>
 </section>
 {% endwith %}
 {% endwith %}

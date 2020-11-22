@@ -11,14 +11,14 @@
                 <label>Imię</label>
                 <input type="text" class="form-control validated-input" id="firstname" name="firstname" placeholder="Imię" value="{{ form_data.get('firstname', '') }}"/>
                 {% if 'firstname' in messages %}
-                <label><label class="alert alert-danger" role="alert">Błędne imię</label>
+                <label><label class="alert alert-danger" role="alert">Błędne imię (conajmniej 2 znaki, z wielkiej litery)</label>
                 {% endif %}
             </p>
             <p>
                 <label>Nazwisko</label>
                 <input type="text"  class="form-control validated-input" id="lastname" name="lastname" placeholder="Nazwisko" value="{{ form_data.get('lastname', '') }}"/>
                 {% if 'lastname' in messages %}
-                <label class="alert alert-danger" role="alert">Błędne nazwisko</label>
+                <label class="alert alert-danger" role="alert">Błędne nazwisko (conajmniej 2 znaki, z wielkiej litery)</label>
                 {% endif %}
             </p>
             <p>
@@ -27,7 +27,7 @@
                 {% if 'login_taken' in messages %}
                 <label class="alert alert-danger" role="alert">Login zajęty</label>
                 {% elif 'login' in messages %}
-                <label class="alert alert-danger" role="alert">Błędny login</label>
+                <label class="alert alert-danger" role="alert">Błędny login (3-16 znaków, małe litery)</label>
                 {% endif %}
             </p>
             <p>
@@ -41,7 +41,7 @@
                 <label>Hasło</label>
                 <input type="password" class="form-control validated-input" id="password" name="password" placeholder="Hasło"/>
                 {% if 'password' in messages %}
-                <label class="alert alert-danger" role="alert">Błędne hasło</label>
+                <label class="alert alert-danger" role="alert">Błędne hasło (conajmniej 8 znaków)</label>
                 {% endif %}
             </p>
             <p>
