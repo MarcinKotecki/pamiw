@@ -9,14 +9,17 @@ import uuid
 import json
 
 load_dotenv()
-db = Redis(host='redis', port=6379, db=0)
+redis_url = getenv("REDIS_URL")
+db = Redis.from_url(redis_url) if redis_url else Redis(host='redis', port=6379, db=0)
 SESSION_TYPE = "redis"
 SESSION_REDIS = db
+
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.secret_key = getenv("SECRET_KEY")
 ses = Session(app)
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=int(getenv("SESSION_TIMEOUT_MINUTES")))
+
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
 def user_exists(login):
     return db.exists(f"user:{login}")
@@ -35,10 +38,7 @@ def verify_user(login, password):
 
 def read_user_packages(login):
     packages = db.hget(f"user:{login}", "packages")
-    if packages is None:
-        packages = {}
-    else:
-        packages = json.loads(packages)
+    packages = json.loads(packages) if packages else {}
     return packages
 
 def create_package(login, package):
@@ -59,10 +59,7 @@ def index():
 
 @app.route('/sender/register', methods=["GET"])
 def sender_register_form():
-    return render_template(
-        "sender-register.html", 
-        form_data = session.pop('form_data', {})
-    )
+    return render_template("sender-register.html")
 
 @app.route('/sender/register', methods=["POST"])
 def sender_register():
@@ -101,10 +98,7 @@ def sender_register():
 
 @app.route('/sender/login', methods=["GET"])
 def sender_login_form():
-    return render_template(
-        "sender-login.html", 
-        form_data = session.pop('form_data', {})
-    )
+    return render_template("sender-login.html")
 
 @app.route('/sender/login', methods=["POST"])
 def sender_login():
@@ -132,8 +126,7 @@ def sender_dashboard():
 
     return render_template(
         "sender-dashboard.html",
-        packages = read_user_packages(session.get('logged-in')),
-        form_data = session.pop('form_data', {})
+        packages = read_user_packages(session.get('logged-in'))
     )
 
 @app.route('/sender/package', methods=['POST'])

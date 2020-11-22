@@ -2,6 +2,7 @@
 {% block title %}Moje paczki{% endblock %}
 {% block main %}
 {% with messages = get_flashed_messages() %}
+{% with form_data = session.pop('form_data', {}) %}
 <section>
     <h4>Lista paczek</h4>
     <table class="table table-striped table-bordered">
@@ -61,5 +62,6 @@
         <input type="submit" name="submit" value="Utwórz etykietę"/>
     </form>
 </section>
+{% endwith %}
 {% endwith %}
 {% endblock %}

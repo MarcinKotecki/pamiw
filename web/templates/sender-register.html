@@ -2,6 +2,7 @@
 {% block title %}Rejestracja{% endblock %}
 {% block main %}
 {% with messages = get_flashed_messages() %}
+{% with form_data = session.pop('form_data', {}) %}
 <section>
     <form class="form-container" method="POST" action="/sender/register">
         <h4>Zarejestruj się</h4>
@@ -61,5 +62,6 @@
         <input type="submit" name="submit" value="Zarejestruj się"/>
     </form>
 </section>
+{% endwith %}
 {% endwith %}
 {% endblock %}
