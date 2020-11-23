@@ -54,7 +54,6 @@ def delete_package(login, packageid):
     jpackages = json.dumps(packages)
     db.hset(f"user:{login}", "packages", jpackages)
 
-
 def isvalid(field, value):
     PL = 'ĄĆĘŁŃÓŚŹŻ'
     pl = 'ąćęłńóśźż'
@@ -71,6 +70,15 @@ def isvalid(field, value):
     if field == 'address':
         return re.compile('.+').match(value.strip())
     return False
+
+
+@app.errorhandler(500)
+def server_error(error):
+    try:
+        db.ping()
+    except:
+        return render_template("error.html", error="Nie można połączyć się z bazą danych.")
+    return render_template("error.html", error="Wystąpił nieznany błąd serwera.")
 
 @app.route('/')
 def index():
