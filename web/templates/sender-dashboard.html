@@ -16,8 +16,8 @@
             </p>
             <p>
                 <label>ID skrytki</label>
-                <input type="text" class="form-control validated-input" id="machine_id" name="machine_id" placeholder="id skrytki" value="{{ form_data.get('machine_id', '') }}"/>
-                {% if 'machine_id' in messages %}
+                <input type="text" class="form-control validated-input" id="machine" name="machine" placeholder="id skrytki" value="{{ form_data.get('machine', '') }}"/>
+                {% if 'machine' in messages %}
                 <label class="alert alert-danger" role="alert">Brak skrytki</label>
                 {% endif %}
             </p>
@@ -46,11 +46,11 @@
             <th scope="col">Rozmiar</th>
             <th scope="col"></th>
         </tr>
-        {% for id, package in packages.items() %}
+        {% for package in packages %}
         <tr>
-            <th scope="row">{{id}}</th>
+            <th scope="row">{{package.uuid}}</th>
             <th>{{package.receiver}}</th>
-            <th>{{package.machine_id}}</th>
+            <th>{{package.machine}}</th>
             <th>{{package.size}}</th>
             <th>
                 <form method="POST" action="/sender/package?action=delete">

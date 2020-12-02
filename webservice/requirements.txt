@@ -1,9 +1,7 @@
 Flask
 flask_sqlalchemy
 flask_migrate
-flask_session
 psycopg2-binary
 bcrypt
 gunicorn
 jwt
-requests

@@ -1,58 +1,70 @@
-from flask import Flask, request, render_template, make_response, session, redirect, flash
+from flask import session, Flask, request, render_template, make_response, redirect, flash
 from flask_session import Session
-from dotenv import load_dotenv
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from bcrypt import hashpw, checkpw, gensalt
 from os import getenv
 from datetime import timedelta, datetime
-from redis import Redis
 import uuid
 import json
 import re
+import requests
 
-load_dotenv()
-redis_url = getenv("REDIS_URL")
-db = Redis.from_url(redis_url) if redis_url else Redis(host='redis', port=6379, db=0)
-SESSION_TYPE = "redis"
-SESSION_REDIS = db
+#----------------
+
+JWT_SECRET = getenv("JWT_SECRET")
+SECRET_KEY = getenv("SECRET_KEY")
+POSTGRES_URI = getenv("POSTGRES_URI")
+WEBSERVICE_URL = getenv("WEBSERVICE_URL")
 
 app = Flask(__name__)
-app.config.from_object(__name__)
-app.secret_key = getenv("SECRET_KEY")
+app.secret_key = SECRET_KEY
+app.config['SQLALCHEMY_DATABASE_URI'] = POSTGRES_URI
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+app.config['SESSION_TYPE'] = "sqlalchemy"
+app.config['SESSION_SQLALCHEMY'] = db
+app.config['SESSION_SQLALCHEMY_TABLE'] = "sessions"
 ses = Session(app)
+ses.app.session_interface.db.create_all()
 
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
+#----------------
+
+class UserModel(db.Model):
+    __tablename__ = 'users'
+    firstname = db.Column(db.String())
+    lastname = db.Column(db.String())
+    login = db.Column(db.String(), primary_key=True)
+    email = db.Column(db.String())
+    password = db.Column(db.String())
+    address = db.Column(db.String())
+    def __init__(self, data):
+        self.firstname = data.get("firstname")
+        self.lastname = data.get("lastname")
+        self.login = data.get("login")
+        self.email = data.get("email")
+        self.password = data.get("password")
+        self.address = data.get("address")
+    def __repr__(self):
+        return f"<User {self.login}"
+
+#----------------
 
 def user_exists(login):
-    return db.exists(f"user:{login}")
+    return db.session.query(UserModel).filter_by(login=login).first()
 
-def create_user(login, password, userdata):
-    hpassword = hashpw(password.encode(), gensalt(5))
-    db.hset(f"user:{login}", "password", hpassword)
-    for key, value in userdata.items():
-        db.hset(f"user:{login}", key, value)
+def create_user(data):
+    data["password"] = hashpw(data["password"].encode('utf-8'), gensalt(5)).decode('utf8')
+    new_user = UserModel(data)
+    db.session.add(new_user)
+    db.session.commit()
 
 def verify_user(login, password):
     if not user_exists(login):
         return False
-    hpassword = db.hget(f"user:{login}", "password")
-    return checkpw(password.encode(), hpassword)
-
-def read_user_packages(login):
-    packages = db.hget(f"user:{login}", "packages")
-    packages = json.loads(packages) if packages else {}
-    return packages
-
-def create_package(login, package):
-    packages = read_user_packages(login)
-    packages[uuid.uuid4().hex] = package
-    jpackages = json.dumps(packages)
-    db.hset(f"user:{login}", "packages", jpackages)
-
-def delete_package(login, packageid):
-    packages = read_user_packages(login)
-    packages.pop(packageid, None)
-    jpackages = json.dumps(packages)
-    db.hset(f"user:{login}", "packages", jpackages)
+    hpassword = db.session.query(UserModel).filter_by(login=login).first().password
+    return checkpw(password.encode('utf-8'), hpassword.encode('utf-8'))
 
 def isvalid(field, value):
     PL = 'ĄĆĘŁŃÓŚŹŻ'
@@ -71,14 +83,11 @@ def isvalid(field, value):
         return re.compile('.+').match(value.strip())
     return False
 
+#--------------------
 
 @app.errorhandler(500)
 def server_error(error):
-    try:
-        db.ping()
-    except:
-        return render_template("error.html", error="Nie można połączyć się z bazą danych.")
-    return render_template("error.html", error="Wystąpił nieznany błąd serwera.")
+    return render_template("error.html", error=error)
 
 @app.route('/')
 def index():
@@ -116,10 +125,12 @@ def sender_register():
     userdata = {
         "firstname": firstname,
         "lastname": lastname,
+        "login": login,
         "email": email,
+        "password": password,
         "address": address
     }
-    create_user(login, password, userdata)
+    create_user(userdata)
     return redirect('/sender/login')
 
 @app.route('/sender/login', methods=["GET"])
@@ -150,10 +161,15 @@ def sender_dashboard():
     if 'logged-in' not in session:
         return redirect('/sender/login')
 
-    return render_template(
-        "sender-dashboard.html",
-        packages = read_user_packages(session.get('logged-in'))
-    )
+    params = { "sender": session.get('logged-in') }
+    r = requests.get(f"{WEBSERVICE_URL}/package", params=params)
+    if r.status_code == 200:
+        return render_template(
+            "sender-dashboard.html",
+            packages = r.json()['packages']
+        )
+    else:
+        return render_template("error.html", error="Nie udało się załadować listy paczek.")
 
 @app.route('/sender/package', methods=['POST'])
 def sender_package_create():
@@ -162,12 +178,12 @@ def sender_package_create():
         return redirect('/sender/dashboard')
 
     receiver = request.form.get("receiver")
-    machine_id = request.form.get("machine_id")
+    machine = request.form.get("machine")
     size = request.form.get("size")
 
     errors = []
     if (len(receiver) == 0): errors.append('receiver')
-    if (len(machine_id) == 0): errors.append('machine_id')
+    if (len(machine) == 0): errors.append('machine')
     if not size in ['S', 'M', 'L']: errors.append('size')
     if len(errors) > 0:
         for error in errors:
@@ -176,13 +192,18 @@ def sender_package_create():
         return redirect('/sender/dashboard')
 
     package = {
+        "sender": session.get('logged-in'),
         "receiver": receiver,
-        "machine_id": machine_id,
+        "machine": machine,
         "size": size
     }
-    create_package(session.get('logged-in'), package)
+    r = requests.post(f"{WEBSERVICE_URL}/package", json=package)
+    if r.status_code == 201:
+        return redirect('/sender/dashboard')
+    else:
+        return render_template("error.html", error="W wyniku błędu serwera nie udało się dodać paczki.")
 
-    return redirect('/sender/dashboard')
-    
+#----------------
+
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=8000)

@@ -1,4 +1,4 @@
-version: '2'
+version: '3.7'
 services:
   web:
     build: web
@@ -6,8 +6,26 @@ services:
       - "8000:8000"
     env_file: .env
     depends_on:
-      - redis
-  redis:
-    image: redis:alpine
+      - postgres
+      - webservice
+  webservice:
+    build: webservice
     ports:
-      - "6379:6379"
+      - "8001:8000"
+    env_file: .env
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres
+    ports:
+    - "5432:5432"
+    environment:
+      POSTGRES_DB: dev
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
