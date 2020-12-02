@@ -9,13 +9,20 @@ import uuid
 import json
 import re
 import requests
+import os
 
 #----------------
 
-JWT_SECRET = getenv("JWT_SECRET")
-SECRET_KEY = getenv("SECRET_KEY")
-POSTGRES_URI = getenv("POSTGRES_URI")
-WEBSERVICE_URL = getenv("WEBSERVICE_URL")
+if os.environ.get('IS_HEROKU', None):
+    JWT_SECRET = os.environ.get('JWT_SECRET', None)
+    SECRET_KEY = os.environ.get('SECRET_KEY', None)
+    POSTGRES_URI = os.environ.get('POSTGRES_URI', None)
+    WEBSERVICE_URL = os.environ.get('WEBSERVICE_URL', None)
+else:
+    JWT_SECRET = getenv("JWT_SECRET")
+    SECRET_KEY = getenv("SECRET_KEY")
+    POSTGRES_URI = getenv("POSTGRES_URI")
+    WEBSERVICE_URL = getenv("WEBSERVICE_URL")
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
