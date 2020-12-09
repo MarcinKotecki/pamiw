@@ -1,10 +1,13 @@
-from flask import session, Flask, request, render_template, make_response, redirect, flash
+from flask import session, Flask, request, render_template, make_response, redirect, flash, g
+
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+
 from bcrypt import hashpw, checkpw, gensalt
-from os import getenv
+from dotenv import load_dotenv
 from datetime import timedelta, datetime
+import jwt
 import uuid
 import json
 import re
@@ -13,23 +16,15 @@ import os
 
 #----------------
 
-if os.environ.get('IS_HEROKU', None):
-    JWT_SECRET = os.environ.get('JWT_SECRET', None)
-    SECRET_KEY = os.environ.get('SECRET_KEY', None)
-    POSTGRES_URI = os.environ.get('POSTGRES_URI', None)
-    WEBSERVICE_URL = os.environ.get('WEBSERVICE_URL', None)
-else:
-    JWT_SECRET = getenv("JWT_SECRET")
-    SECRET_KEY = getenv("SECRET_KEY")
-    POSTGRES_URI = getenv("POSTGRES_URI")
-    WEBSERVICE_URL = getenv("WEBSERVICE_URL")
-
 app = Flask(__name__)
-app.secret_key = SECRET_KEY
-app.config['SQLALCHEMY_DATABASE_URI'] = POSTGRES_URI
+load_dotenv()
+JWT_SECRET = os.environ.get('JWT_SECRET')
+WEBSERVICE_URL = os.environ.get('WEBSERVICE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('POSTGRES_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+app.secret_key = os.environ.get('SECRET_KEY')
 app.config['SESSION_TYPE'] = "sqlalchemy"
 app.config['SESSION_SQLALCHEMY'] = db
 app.config['SESSION_SQLALCHEMY_TABLE'] = "sessions"
@@ -56,15 +51,12 @@ class UserModel(db.Model):
     def __repr__(self):
         return f"<User {self.login}"
 
-#----------------
-
 def user_exists(login):
     return db.session.query(UserModel).filter_by(login=login).first()
 
 def create_user(data):
     data["password"] = hashpw(data["password"].encode('utf-8'), gensalt(5)).decode('utf8')
-    new_user = UserModel(data)
-    db.session.add(new_user)
+    db.session.add(UserModel(data))
     db.session.commit()
 
 def verify_user(login, password):
@@ -76,19 +68,24 @@ def verify_user(login, password):
 def isvalid(field, value):
     PL = 'ĄĆĘŁŃÓŚŹŻ'
     pl = 'ąćęłńóśźż'
-    if field == 'firstname':
-        return re.compile(f'[A-Z{PL}][a-z{pl}]+').match(value)
-    if field == 'lastname':
-        return re.compile(f'[A-Z{PL}][a-z{pl}]+').match(value)
-    if field == 'login':
-        return re.compile('[a-z]{3,16}').match(value)
-    if field == 'email':
-        return re.compile('[\w\.-]+@[\w\.-]+(\.[\w]+)+').match(value)
-    if field == 'password':
-        return re.compile('.{8,}').match(value.strip())
-    if field == 'address':
-        return re.compile('.+').match(value.strip())
+    if field == 'firstname': return re.compile(f'[A-Z{PL}][a-z{pl}]+').match(value)
+    if field == 'lastname': return re.compile(f'[A-Z{PL}][a-z{pl}]+').match(value)
+    if field == 'login': return re.compile('[a-z]{3,16}').match(value)
+    if field == 'email': return re.compile('[\w\.-]+@[\w\.-]+(\.[\w]+)+').match(value)
+    if field == 'password': return re.compile('.{8,}').match(value.strip())
+    if field == 'address': return re.compile('.+').match(value.strip())
     return False
+
+def generate_token(user):
+    payload = {
+        "iss": "paczkaplus",
+        "aud": "paczkaplus",
+        "iat": datetime.utcnow(),
+        "exp": datetime.utcnow() + timedelta(seconds=60),
+        "sub": user,
+        "usertype": "sender",
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm='HS256').decode()
 
 #--------------------
 
@@ -168,20 +165,28 @@ def sender_dashboard():
     if 'logged-in' not in session:
         return redirect('/sender/login')
 
-    params = { "sender": session.get('logged-in') }
-    r = requests.get(f"{WEBSERVICE_URL}/package", params=params)
+    user = session.get('logged-in')
+    url = f"{WEBSERVICE_URL}/package"
+    headers = {"Authorization": f"Bearer {generate_token(user)}"}
+    params = {"sender": user}
+    r = requests.request("GET", url, params=params, headers=headers)
     if r.status_code == 200:
+        r_json = json.loads(r.content)
+        g.links = r_json['_links']
         return render_template(
             "sender-dashboard.html",
-            packages = r.json()['packages']
+            packages = r_json['packages']
         )
     else:
-        return render_template("error.html", error="Nie udało się załadować listy paczek.")
+        return render_template("error.html", error=f"Nie udało się załadować listy paczek.{r.status_code}{params}{headers}")
 
 @app.route('/sender/package', methods=['POST'])
 def sender_package_create():
     if (request.args.get('action') == 'delete'):
-        delete_package(session.get('logged-in'), request.form.get("id"))
+        user = session.get('logged-in')
+        url = f"{WEBSERVICE_URL}/package/{request.form.get('id')}"
+        headers = {"Authorization": f"Bearer {generate_token(user)}"}
+        r = requests.request("DELETE", url, headers=headers)
         return redirect('/sender/dashboard')
 
     receiver = request.form.get("receiver")
@@ -202,9 +207,11 @@ def sender_package_create():
         "sender": session.get('logged-in'),
         "receiver": receiver,
         "machine": machine,
-        "size": size
+        "size": size,
+        "status": "label_created"
     }
-    r = requests.post(f"{WEBSERVICE_URL}/package", json=package)
+    headers = {"Authorization": f"Bearer {generate_token(session.get('logged-in'))}"}
+    r = requests.post(f"{WEBSERVICE_URL}/package", json=package, headers=headers)
     if r.status_code == 201:
         return redirect('/sender/dashboard')
     else:

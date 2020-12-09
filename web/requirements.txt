@@ -2,8 +2,9 @@ Flask
 flask_sqlalchemy
 flask_migrate
 flask_session
+python-dotenv
 psycopg2-binary
 bcrypt
 gunicorn
-jwt
+PyJWT
 requests

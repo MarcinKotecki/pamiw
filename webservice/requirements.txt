@@ -1,7 +1,9 @@
 Flask
 flask_sqlalchemy
 flask_migrate
+python-dotenv
 psycopg2-binary
 bcrypt
 gunicorn
-jwt
+PyJWT
+flask_hal

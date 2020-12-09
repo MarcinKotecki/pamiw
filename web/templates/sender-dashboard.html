@@ -44,6 +44,7 @@
             <th scope="col">Odbiorca</th>
             <th scope="col">Identyfikator skrytki</th>
             <th scope="col">Rozmiar</th>
+            <th scope="col">Status</th>
             <th scope="col"></th>
         </tr>
         {% for package in packages %}
@@ -52,11 +53,14 @@
             <th>{{package.receiver}}</th>
             <th>{{package.machine}}</th>
             <th>{{package.size}}</th>
+            <th>{{package.status}}</th>
             <th>
+                {% if package.status in ['label_created', 'preparing_package'] %}
                 <form method="POST" action="/sender/package?action=delete">
-                    <input type="hidden" id="id" name="id" value="{{id}}">
+                    <input type="hidden" id="id" name="id" value="{{package.uuid}}">
                     <input type="submit" class="btn btn-danger" name="submit" value="usuń"/>
                 </form>
+                {% endif %}
             </th>
         </tr>
         {% endfor %}
