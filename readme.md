@@ -1,5 +1,7 @@
 # Paczka+
 
+Heroku: paczkaplus.herokuapp.com
+
 ### Setup
 1. Create `.env` file with these variables:
 ```
