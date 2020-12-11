@@ -4,7 +4,7 @@ if ! grep -q "SECRET_KEY=" ".env"; then
     echo -e "\nSECRET_KEY=${key}" >> .env
 fi
 if ! grep -q "POSTGRES_URI=" ".env"; then
-    key="postgresql://dev:dev@postgres:5432/dev"
+    key="postgresql://dev:dev@db:5432/dev"
     echo -e "\nPOSTGRES_URI=${key}" >> .env
 fi
 if ! grep -q "JWT_SECRET=" ".env"; then

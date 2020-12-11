@@ -30,7 +30,6 @@ app.config['SESSION_SQLALCHEMY'] = db
 app.config['SESSION_SQLALCHEMY_TABLE'] = "sessions"
 ses = Session(app)
 app.permanent_session_lifetime = timedelta(minutes=5)
-ses.app.session_interface.db.create_all()
 
 #----------------
 

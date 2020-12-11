@@ -3,6 +3,13 @@
 Heroku: paczkaplus.herokuapp.com
 
 ### Setup
+Just run this (.env will be generated for you)
+```
+./rundocker.sh
+```
+
+OR (the long way)
+
 1. Create `.env` file with these variables:
 ```
 SECRET_KEY=
@@ -17,7 +24,14 @@ docker-compose build
 docker-compose up
 ```
 
-Or just run this (.env will be generated for you)
+### Usage
+
+web application for sender: 
+localhost:8000
+
+shell app for delivery person:
+run from courierapp/
 ```
-./rundocker.sh
+python app.py
 ```
+
