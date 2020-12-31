@@ -9,6 +9,7 @@ from flask_migrate import Migrate
 
 from bcrypt import hashpw, checkpw, gensalt
 from dotenv import load_dotenv
+from datetime import datetime
 import jwt
 import json
 import uuid
@@ -54,6 +55,28 @@ class PackageModel(db.Model):
             "status": self.status
         }
 
+class NotificaionModel(db.Model):
+    __tablename__ = 'notifications'
+    uuid = db.Column(db.String(), primary_key=True)
+    user = db.Column(db.String())
+    text = db.Column(db.String())
+    state = db.Column(db.String())
+    time = db.Column(db.String())
+    def __init__(self, data):
+        self.uuid = data.get("uuid")
+        self.user = data.get("user")
+        self.text = data.get("text")
+        self.state = data.get("state")
+        self.time = data.get("time")
+    def as_dict(self):
+        return {
+            "uuid": self.uuid,
+            "user": self.user,
+            "text": self.text,
+            "state": self.state,
+            "time": self.time
+        }
+
 def get_packages(sender = None):  
     if sender:
         packages = db.session.query(PackageModel).filter_by(sender=sender)
@@ -68,10 +91,30 @@ def get_package(id):
 def delete_package(package):
     db.session.delete(package)
     db.session.commit()
+    create_notification(package.sender, f"Paczka o id {package.uuid} została usunięta.")
 
 def update_package(package, data):
     for key, value in data.items():
         setattr(package, key, value)
+    db.session.commit()
+    create_notification(package.sender, f"Paczka o id {package.uuid} zmieniła stan na {package.status}.")
+
+def get_notifications(user):
+    notifications = db.session.query(NotificaionModel).filter_by(user=user).filter_by(state="created")
+    notifications_list = [notification.as_dict() for notification in notifications]
+    for notification in notifications:
+        setattr(notification, "state", "read")
+    db.session.commit()
+    return notifications_list
+
+def create_notification(user, text):
+    db.session.add(NotificaionModel({
+            "user": user,
+            "text": text,
+            "state": "created",
+            "time": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            "uuid": uuid.uuid4().hex
+        }))
     db.session.commit()
 
 #----------------
@@ -96,7 +139,7 @@ def package():
     if request.method == 'GET':
         sender = request.args.get('sender')
         if (g.auth.get('usertype') != 'courier') and (sender is None or g.auth.get('sub') != sender):
-            return "Unauthorized", 403
+            return "Unauthorized", 401
         links = []
         links.append(Link('package:create', '/package', type="POST"))
         links.append(Link('package:delete', '/package/{id}', templated=True, type="DELETE"))
@@ -108,7 +151,7 @@ def package():
     elif request.method == 'POST':
         json = request.get_json()
         if (g.auth.get('sub') != json.get('sender')):
-            return "Unauthorized", 403
+            return "Unauthorized", 401
         db.session.add(PackageModel({
             "uuid": uuid.uuid4().hex,
             "sender": json.get("sender"),
@@ -127,17 +170,32 @@ def package_by_id(id):
         return "Not found", 404
 
     if (g.auth.get('usertype') != 'courier') and (package.sender != g.auth.get('sub')):
-        return "Unauthorized", 403
+        return "Unauthorized", 401
 
     if request.method == 'DELETE':
-        delete_package(package)
-        return "Deleted", 200
+        if package.status in ['label_created', 'preparing_package']:
+            delete_package(package)
+            return "Deleted", 200
+        else:
+            return "Forbidden", 403
     
     elif request.method == 'PATCH':
         json = request.get_json()
         update_package(package, json)
         return "Updated", 200
 
+@app.route('/notification', methods=["POST"])
+def check_notifications():
+    if request.method == 'POST':
+        if (g.auth.get('usertype') != 'sender'):
+            return "Forbidden", 403
+        else:
+            user = g.auth.get('sub')
+            notifications = get_notifications(user)
+            if len(notifications) > 0:
+                return json.dumps(notifications), 200
+            else:
+                return "No Content", 204
 
 #----------------
     

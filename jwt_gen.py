@@ -14,5 +14,5 @@ payload = {
         "sub": "",
         "usertype": "courier",
     }
-token = jwt.encode(payload, JWT_SECRET, algorithm='HS256').decode()
+token = jwt.encode(payload, JWT_SECRET, algorithm='HS256')
 print(token)

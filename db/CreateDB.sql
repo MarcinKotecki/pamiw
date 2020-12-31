@@ -32,4 +32,14 @@ CREATE TABLE "public"."sessions" (
     CONSTRAINT "sessions_session_id_key" UNIQUE ("session_id")
 ) WITH (oids = false);
 
+CREATE TABLE "public"."notifications" (
+    "user" text NOT NULL,
+    "text" text NOT NULL,
+    "state" text NOT NULL,
+    "time" text NOT NULL,
+    "uuid" text NOT NULL,
+    CONSTRAINT "notifications_uuid" PRIMARY KEY ("uuid")
+) WITH (oids = false);
+
+
 -- 2020-12-09 14:14:37.972408+00

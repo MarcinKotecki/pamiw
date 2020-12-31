@@ -85,7 +85,7 @@ def generate_token(user):
         "sub": user,
         "usertype": "sender",
     }
-    return jwt.encode(payload, JWT_SECRET, algorithm='HS256').decode()
+    return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
 
 #--------------------
 
@@ -216,6 +216,20 @@ def sender_package_create():
         return redirect('/sender/dashboard')
     else:
         return render_template("error.html", error="W wyniku błędu serwera nie udało się dodać paczki.")
+
+@app.route('/notifications', methods=['POST'])
+def get_notifications():
+    user = session.get('logged-in')
+    if (user is None):
+        return "Forbidden", 403
+    url = f"{WEBSERVICE_URL}/notification"
+    headers = {"Authorization": f"Bearer {generate_token(user)}"}
+    r = requests.request("POST", url, headers=headers)
+    if r.status_code == 200:
+        return r.content, 200
+    else:
+        return "No content", 204
+
 
 #----------------
 
