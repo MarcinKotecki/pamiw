@@ -8,3 +8,5 @@ bcrypt
 gunicorn
 PyJWT
 requests
+authlib
+six

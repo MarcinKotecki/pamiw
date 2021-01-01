@@ -17,8 +17,7 @@ CREATE TABLE "public"."packages" (
     "machine" text NOT NULL,
     "size" text NOT NULL,
     "status" text NOT NULL,
-    CONSTRAINT "packages_uuid" UNIQUE ("uuid"),
-    CONSTRAINT "packages_sender_fkey" FOREIGN KEY (sender) REFERENCES users(login) NOT DEFERRABLE
+    CONSTRAINT "packages_uuid" UNIQUE ("uuid")
 ) WITH (oids = false);
 
 CREATE SEQUENCE sessions_id_seq INCREMENT 1 MINVALUE 1 MAXVALUE 2147483647 START 3 CACHE 1;

@@ -4,6 +4,7 @@
 {% with messages = get_flashed_messages() %}
 {% with form_data = session.pop('form_data', {}) %}
 <section>
+    {% include "/common/auth0.html" %}
     <form class="form-container" method="POST" action="/sender/register">
         <h4>Zarejestruj się</h4>
         <div class="form-elements">

@@ -14,6 +14,15 @@ import re
 import requests
 import os
 
+# auth0
+from functools import wraps
+from os import environ as env
+from werkzeug.exceptions import HTTPException
+from dotenv import find_dotenv
+from flask import jsonify, url_for
+from authlib.integrations.flask_client import OAuth
+from six.moves.urllib.parse import urlencode
+
 #----------------
 
 app = Flask(__name__)
@@ -30,6 +39,20 @@ app.config['SESSION_SQLALCHEMY'] = db
 app.config['SESSION_SQLALCHEMY_TABLE'] = "sessions"
 ses = Session(app)
 app.permanent_session_lifetime = timedelta(minutes=5)
+oauth = OAuth(app)
+AUTH0_CALLBACK_URL = os.environ.get('AUTH0_CALLBACK_URL')
+AUTH0_CLIENT_ID = os.environ.get('AUTH0_CLIENT_ID')
+auth0 = oauth.register(
+    'auth0',
+    client_id=AUTH0_CLIENT_ID,
+    client_secret=os.environ.get('AUTH0_CLIENT_SECRET'),
+    api_base_url=os.environ.get('AUTH0_API_BASE_URL'),
+    access_token_url=os.environ.get('AUTH0_ACCESS_TOKEN_URL'),
+    authorize_url=os.environ.get('AUTH0_AUTHORIZE_URL'),
+    client_kwargs={
+        'scope': 'openid profile email',
+    },
+)
 
 #----------------
 
@@ -88,6 +111,20 @@ def generate_token(user):
     return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
 
 #--------------------
+
+@app.route('/callback')
+def callback_handling():
+    auth0.authorize_access_token()
+    resp = auth0.get('userinfo')
+    userinfo = resp.json()
+    session['logged-in'] = userinfo['sub']
+    session['login_type'] = "auth0"
+    session['login-in_time'] = datetime.now().isoformat()
+    return redirect('/sender/dashboard')
+
+@app.route('/login')
+def login():
+    return auth0.authorize_redirect(redirect_uri=AUTH0_CALLBACK_URL)
 
 @app.errorhandler(500)
 def server_error(error):
@@ -152,13 +189,19 @@ def sender_login():
         return redirect('/sender/login')
 
     session['logged-in'] = login
+    session['login_type'] = "normal"
     session['login-in_time'] = datetime.now().isoformat()
     return redirect('/sender/dashboard')
     
 @app.route('/sender/logout')
 def sender_logout():
-    session.clear()
-    return redirect('/')
+    if (session['login_type'] == "auth0"):
+        session.clear()
+        params = {'returnTo': url_for('index', _external=True), 'client_id': AUTH0_CLIENT_ID}
+        return redirect(auth0.api_base_url + '/v2/logout?' + urlencode(params))
+    else:
+        session.clear()
+        return redirect('/')
 
 @app.route('/sender/dashboard')
 def sender_dashboard():
@@ -205,7 +248,7 @@ def sender_package_create():
 
     package = {
         "sender": session.get('logged-in'),
-        "receiver": receiver,
+        "receiver": session['logged-in'], #receiver,
         "machine": machine,
         "size": size,
         "status": "label_created"
