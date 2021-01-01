@@ -252,7 +252,7 @@ def sender_package_create():
 
     package = {
         "sender": session.get('logged-in'),
-        "receiver": session['logged-in'], #receiver,
+        "receiver": receiver,
         "machine": machine,
         "size": size,
         "status": "label_created"

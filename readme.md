@@ -24,9 +24,9 @@ AUTH0_CALLBACK_URL=http://localhost:8000/callback
 SECRET_KEY=             #long random string
 JWT_SECRET=             #long random string
 COURIER_TOKEN=          #set JWT_SECRET first, then use 'python jwt_gen.py' to generate this value
-AUTH0_CLIENT_ID=        #value from auth0.com
-AUTH0_CLIENT_SECRET=    #value from auth0.com
-AUTH0_API_BASE_URL=     #value from auth0.com (url needs 'https://' at the start!)
+AUTH0_CLIENT_ID=        #from auth0.com
+AUTH0_CLIENT_SECRET=    #from auth0.com
+AUTH0_API_BASE_URL=     #from auth0.com (url needs 'https://' at the start!)
 
 ```
 2. Run with docker compose
