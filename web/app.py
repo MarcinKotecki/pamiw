@@ -42,13 +42,14 @@ app.permanent_session_lifetime = timedelta(minutes=5)
 oauth = OAuth(app)
 AUTH0_CALLBACK_URL = os.environ.get('AUTH0_CALLBACK_URL')
 AUTH0_CLIENT_ID = os.environ.get('AUTH0_CLIENT_ID')
+AUTH0_BASE_URL = os.environ.get('AUTH0_API_BASE_URL')
 auth0 = oauth.register(
     'auth0',
     client_id=AUTH0_CLIENT_ID,
     client_secret=os.environ.get('AUTH0_CLIENT_SECRET'),
-    api_base_url=os.environ.get('AUTH0_API_BASE_URL'),
-    access_token_url=os.environ.get('AUTH0_ACCESS_TOKEN_URL'),
-    authorize_url=os.environ.get('AUTH0_AUTHORIZE_URL'),
+    api_base_url=AUTH0_BASE_URL,
+    access_token_url=AUTH0_BASE_URL + '/oauth/token',
+    authorize_url=AUTH0_BASE_URL + '/authorize',
     client_kwargs={
         'scope': 'openid profile email',
     },
@@ -124,11 +125,14 @@ def callback_handling():
 
 @app.route('/login')
 def login():
-    return auth0.authorize_redirect(redirect_uri=AUTH0_CALLBACK_URL)
+    try:
+        return auth0.authorize_redirect(redirect_uri=AUTH0_CALLBACK_URL)
+    except:
+        return render_template("error.html", error="Wystąpił błąd. Logowanie z Auth0 nie jest obecnie możliwe.")
 
 @app.errorhandler(500)
 def server_error(error):
-    return render_template("error.html", error=error)
+    return render_template("error.html", error="Wystąpił nieznany błąd. Spróbuj ponownie później lub skontaktuj się z administratorem.")
 
 @app.route('/')
 def index():

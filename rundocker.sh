@@ -19,5 +19,8 @@ if ! grep -q "COURIER_TOKEN=" ".env"; then
     key="$(python jwt_gen.py)"
     echo -e "COURIER_TOKEN=${key}" >> .env
 fi
-
+if ! grep -q "AUTH0_CALLBACK_URL=" ".env"; then
+    key="http://localhost:8000/callback"
+    echo -e "AUTH0_CALLBACK_URL=${key}" >> .env
+fi
 docker-compose up --build
