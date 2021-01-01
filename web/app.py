@@ -42,7 +42,7 @@ app.permanent_session_lifetime = timedelta(minutes=5)
 oauth = OAuth(app)
 AUTH0_CALLBACK_URL = os.environ.get('AUTH0_CALLBACK_URL')
 AUTH0_CLIENT_ID = os.environ.get('AUTH0_CLIENT_ID')
-AUTH0_BASE_URL = os.environ.get('AUTH0_API_BASE_URL')
+AUTH0_BASE_URL = os.environ.get('AUTH0_API_BASE_URL', '')
 auth0 = oauth.register(
     'auth0',
     client_id=AUTH0_CLIENT_ID,
@@ -115,7 +115,10 @@ def generate_token(user):
 
 @app.route('/callback')
 def callback_handling():
-    auth0.authorize_access_token()
+    try:
+        auth0.authorize_access_token()
+    except:
+        return render_template("error.html", error="Wystąpił błąd przy próbie autoryzacji.")
     resp = auth0.get('userinfo')
     userinfo = resp.json()
     session['logged-in'] = userinfo['sub']
@@ -133,6 +136,10 @@ def login():
 @app.errorhandler(500)
 def server_error(error):
     return render_template("error.html", error="Wystąpił nieznany błąd. Spróbuj ponownie później lub skontaktuj się z administratorem.")
+
+@app.errorhandler(404)
+def server_error(error):
+    return render_template("error.html", error="Strona nie istnieje.")
 
 @app.route('/')
 def index():
