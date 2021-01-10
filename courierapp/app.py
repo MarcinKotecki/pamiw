@@ -6,18 +6,28 @@ from dotenv import load_dotenv
 
 load_dotenv()
 WEBSERVICE_URL = os.environ.get('WEBSERVICE_URL')
-AUTH_HEADER = {"Authorization": f"Bearer {os.environ.get('COURIER_TOKEN')}"}
+AUTH0_LOCAL_URL = os.environ.get('AUTH0_LOCAL_URL')
+AUTH0_TOKEN = os.environ.get('AUTH0_TOKEN')
+AUTH0_HEADER = {"Authorization": f"Bearer {AUTH0_TOKEN}"}
+
 VALID_STATUSES = ['label_created', 'preparing_package', 'package_sent', 'package_delivered', 'package_received']
 
+def get_auth_token():
+    r = requests.get(AUTH0_LOCAL_URL, headers=AUTH0_HEADER)
+    if r.status_code == 200:
+        return {"Authorization": f"Bearer {r.json()['message']}"}
+    else:
+        return {"Authorization": f"Bearer 0"}
+
 def get_packages():
-    r = requests.get(f"{WEBSERVICE_URL}/package", headers=AUTH_HEADER)
+    r = requests.get(f"{WEBSERVICE_URL}/package", headers=get_auth_token())
     if r.status_code == 200:
         return r.json()['packages']
     else:
         return False
 
 def change_package_status(id, status):
-    r = requests.patch(f"{WEBSERVICE_URL}/package/{id}", json={"status":status}, headers=AUTH_HEADER)
+    r = requests.patch(f"{WEBSERVICE_URL}/package/{id}", json={"status":status}, headers=get_auth_token())
     if r.status_code == 200:
         return "success"
     elif r.status_code == 404:

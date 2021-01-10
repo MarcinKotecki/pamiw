@@ -15,10 +15,6 @@ if ! grep -q "WEBSERVICE_URL=" ".env"; then
     key="http://172.17.0.1:8001"
     echo -e "WEBSERVICE_URL=${key}" >> .env
 fi
-if ! grep -q "COURIER_TOKEN=" ".env"; then
-    key="$(python jwt_gen.py)"
-    echo -e "COURIER_TOKEN=${key}" >> .env
-fi
 if ! grep -q "AUTH0_CALLBACK_URL=" ".env"; then
     key="http://localhost:8000/callback"
     echo -e "AUTH0_CALLBACK_URL=${key}" >> .env

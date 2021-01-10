@@ -1,20 +1,5 @@
 version: '3.7'
 services:
-  web:
-    build: web
-    ports:
-      - "8000:8000"
-    env_file: .env
-    depends_on:
-      - db
-      - webservice
-  webservice:
-    build: webservice
-    ports:
-      - "8001:8000"
-    env_file: .env
-    depends_on:
-      - db
   db:
     build: db
     ports:
@@ -23,6 +8,28 @@ services:
     - POSTGRES_PASSWORD=dev
     volumes:
       - ./pgdata:/var/lib/postgresql/data
+  auth0:
+    build: auth0
+    hostname: auth0
+    domainname: auth0.com
+    ports:
+    - "3010:3010"
+    env_file: .env
+  webservice:
+    build: webservice
+    ports:
+      - "8001:8000"
+    env_file: .env
+    depends_on:
+      - db
+  web:
+    build: web
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      - db
+      - webservice
   adminer:
     image: adminer
     ports:
