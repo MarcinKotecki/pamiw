@@ -8,11 +8,15 @@ services:
     - POSTGRES_PASSWORD=dev
     volumes:
       - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - n1
   auth0:
     build: auth0
     ports:
     - "3010:3010"
     env_file: .env
+    networks:
+      - n1
   webservice:
     build: webservice
     ports:
@@ -20,6 +24,8 @@ services:
     env_file: .env
     depends_on:
       - db
+    networks:
+      - n1
   web:
     build: web
     ports:
@@ -28,7 +34,11 @@ services:
     depends_on:
       - db
       - webservice
+    networks:
+      - n1
   adminer:
     image: adminer
     ports:
       - 8002:8080
+networks:
+  n1:

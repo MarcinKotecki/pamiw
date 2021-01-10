@@ -5,7 +5,7 @@ from tabulate import tabulate as tab
 from dotenv import load_dotenv
 
 load_dotenv()
-WEBSERVICE_URL = os.environ.get('WEBSERVICE_URL')
+WEBSERVICE_URL = os.environ.get('WEBSERVICE_URL_COURIER')
 AUTH0_LOCAL_URL = os.environ.get('AUTH0_LOCAL_URL')
 AUTH0_TOKEN = os.environ.get('AUTH0_TOKEN')
 AUTH0_HEADER = {"Authorization": f"Bearer {AUTH0_TOKEN}"}
