@@ -10,8 +10,6 @@ services:
       - ./pgdata:/var/lib/postgresql/data
   auth0:
     build: auth0
-    hostname: auth0
-    domainname: auth0.com
     ports:
     - "3010:3010"
     env_file: .env
@@ -25,7 +23,7 @@ services:
   web:
     build: web
     ports:
-      - "8000:8000"
+      - "443:443"
     env_file: .env
     depends_on:
       - db

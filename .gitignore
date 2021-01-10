@@ -3,3 +3,5 @@ __pycache__/
 pgdata/
 deployheroku.sh
 token.sh
+host.cert
+host.key

@@ -41,7 +41,7 @@ docker-compose up
 ### Usage
 
 web application for sender: 
-localhost:8000
+https://localhost
 
 shell app for delivery person:
 ```

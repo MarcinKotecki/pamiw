@@ -4,5 +4,5 @@ WORKDIR /app
 ADD requirements.txt /app
 RUN pip3 install -r requirements.txt
 ADD . /app
-EXPOSE 8000
-CMD ["gunicorn", "-b", "0.0.0.0:8000", "app:app"]
+EXPOSE 443
+CMD ["gunicorn", "--workers=3", "--certfile=host.cert", "--keyfile=host.key", "-b", "0.0.0.0:443", "app:app"]
